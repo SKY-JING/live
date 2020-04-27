@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <title id="title">视频会议</title>
+    <link rel="stylesheet" type="text/css" href="plugin/layer_mobile/need/layer.css">
+    <link rel="stylesheet" type="text/css" href="css/play.css">
+</head>
+<body>
+    <div class="playDiv">
+        <div class="poster"><img width="100%" height="100%" src="img/playbg.png" /></div>
+    </div>
+    <div class="tip">
+        <div class="play">播放</div>
+        <div class="chat">
+            <div class="msg"><span class="yellow">系统消息</span>&nbsp;<span class="purple">欢迎参加本次视频会议～</span></div>
+        </div>
+        <div class="other">
+            <span class="info icon">厔</span>
+            <span class="barrage icon open">圙</span>
+            <span class="screen small icon">愤</span>
+        </div>
+    </div>
+    <div class="scrollWrapper">
+        <div id="msgDiv">
+            <input id="message" type="text" placeholder="请输入想说的话" autofocus>
+            <span id="sendMsg">send</span>
+        </div>
+    </div>
+    <script src="plugin/layer_mobile/layer.js"></script>
+    <script src="js/iphone-inline-video.min.js"></script>
+    <script src="js/zepto.min.js"></script>
+    <script src="http://res.wx.qq.com/open/js/jweixin-1.0.0.js"></script>
+    <script>
+        // http://wqs.jd.com/promote/superfestival/superfestival.mp4
+        $(function() {
+            // 弹框组件
+            var tool = {
+                layerLoading: function(_flag) {
+                    var msg = '',
+                        index = '';
+                    if (_flag) {
+                        msg = '加载中...';
+                    }
+                    layer.open({
+                        type: 2,
+                        shadeClose: false,
+                        shade: false,
+                        content: msg
+                    });
+                },
+                closeLayer: function() {
+                    layer.closeAll();
+                },
+                layerAlertBack: function(_msg, yesCallback) {
+                    layer.open({
+                        content: _msg,
+                        btn: "确定",
+                        shadeClose: false,
+                        yes: function(index) {
+                            yesCallback && yesCallback();
+                            layer.close(index);
+                        },
+                    });
+                }
+            };
+            /**
+             * [获取url中参数]
+             * @param  {[type]} _key [要获取的键值]
+             * @param  {[type]} _url [要解析的url]
+             * @return {[type]}      [对应的值]
+             */
+            var getUrlParams = function(_key, _url) {
+                if (typeof(_url) == 'object') {
+                    _url = _url.location.href;
+                } else {
+                    _url = (typeof(_url) == 'undefined' || _url == null || _url == '') ? location.href : _url;
+                }
+                if (_url.indexOf('?') == -1) {
+                    return '';
+                }
+                var params = [];
+                _url = _url.split('?')[1].split('&');
+                for (var i = 0, len = _url.length; i < len; i++) {
+                    params = _url[i].split('=');
+                    if (params[0] == _key) {
+                        return params[1].split('#')[0];
+                    }
+                }
+                return '';
+            }
+
+            // 获取数据
+            var playUrl = 'http://wqs.jd.com/promote/superfestival/superfestival.mp4',
+                title = '';
+
+            // 阻止除消息模块外浏览器其他部分滚动，防止微信露底
+            var overscroll = function(el) {
+                el.addEventListener('touchstart', function() {
+                    var top = el.scrollTop,
+                        totalScroll = el.scrollHeight,
+                        currentScroll = top + el.offsetHeight;
+                    if (top === 0) {
+                        el.scrollTop = 1;
+                    } else if (currentScroll === totalScroll) {
+                        el.scrollTop = top - 1;
+                    }
+                });
+                el.addEventListener('touchmove', function(evt) {
+                    if (el.offsetHeight < el.scrollHeight)
+                        evt._isScroller = true;
+                });
+                document.body.addEventListener('touchmove', function(evt) {
+                    if (!evt._isScroller) {
+                        evt.preventDefault();
+                    }
+                });
+            };
+
+            // 播放
+            var play = function() {
+                document.getElementById('video').play();
+                document.addEventListener("WeixinJSBridgeReady", function() {
+                    document.getElementById('video').play();
+                }, false);
+                $('.poster').hide();
+            };
+
+            // 点击播放按钮
+            var alowPlay = function() {
+                $('.play').on('touchstart, click', function() {
+                    $(this).hide();
+                    var html = '<video id="video" src="'+playUrl+'" style="object-fit: fill;" autoplay playsinline webkit-playsinline="true" x5-video-player-type="h5" x5-video-player-fullscreen="true" width=1 height=1 x-webkit-airplay="true" x5-video-orientation="portraint" x5-video-ignore-metadata="true"></video>';
+                    $('.playDiv').prepend(html);
+                    document.getElementById('video').addEventListener("x5videoexitfullscreen", function(){
+                        $('.play').show();
+                    });
+                    play();
+                });
+            };
+
+            //发送消息
+            var sendMessage = function() {
+                var userName = localStorage.getItem('userName');
+                    name = userName === null ? "游客" : userName,
+                    showMsg = function() {
+                        var value = $('#message').val();
+                        if(value === '') {
+                            return;
+                        }
+                        $('.chat').append('<div><span class="pink">'+ name +':</span>&nbsp;<span>'+ value +'</span></div>').scrollTop(10000000);
+                        $('#message').val('');
+                    };
+
+                $('.info').on('click tap', function() {
+                    $('.other').hide();
+                    $('.scrollWrapper').show();
+                    $('#message').focus();
+
+                    $('.scrollWrapper').on('click tap', function() {
+                        $('.other').show();
+                        $('.scrollWrapper').hide();
+                    });
+                    $('#msgDiv').bind('click', function(event){
+                        event.stopPropagation();
+                    });
+
+                    setInterval(function(){
+                        document.body.scrollTop = document.body.scrollHeight;
+                    }, 100);
+                });
+                // 发送弹幕
+                $('#message').on('keydown', function(e) {
+                    if(e.keyCode === 13) { // 发送
+                        showMsg();
+                    }
+                });
+                $('#sendMsg').on('click tap', function() {
+                    showMsg();
+                });
+            };
+
+            //是否打开聊天窗口
+            var openChat = function() {
+                // 弹幕框滚动到最底部
+                $('.chat').scrollTop(100000000);
+
+                // 弹幕开关
+                $('.barrage').on('touchstart', function() {
+                    var $chat = $('.chat');
+                    if ($(this).hasClass('open')) {
+                        $(this).removeClass('open').addClass('close').text('圳');
+                        $chat.hide();
+                    } else {
+                        $(this).removeClass('close').addClass('open').text('圙');
+                        $chat.show();
+                    }
+                });
+            };
+
+            // 横屏竖屏控制
+            var changeOrientation = function() {
+                $('.screen').on('touchstart', function() {
+                    if ($(this).hasClass('small')) {
+                        $(this).removeClass('small').addClass('full').text('圲');
+                        $('#video').attr('x5-video-orientation', 'landscape');
+                    } else {
+                        $(this).removeClass('full').addClass('small').text('愤');
+                        $('#video').attr('x5-video-orientation', 'portraint');
+                    }
+                });
+            };
+
+            !function() {
+                overscroll(document.querySelector('.chat'));
+                changeOrientation();
+                sendMessage();
+                openChat();
+                alowPlay();
+                // ios自动播放
+                if (!!navigator.userAgent.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/)) {
+                    $('.screen').hide(); // ios屏蔽横屏竖屏按钮
+                    $('.play').click();
+                }
+            }();
+        });
+    </script>
+</body>
+</html>

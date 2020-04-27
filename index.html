@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <title>视频会议</title>
+    <meta name=format-detection content="telephone=no">
+    <link rel="stylesheet" type="text/css" href="./css/index.css">
+</head>
+<body>
+    <div class="form">
+        <div class="input">
+            <input id="distinguish" type="number" placeholder="请输入会议ID" name="lastname">
+            <span class="img icon">愣</span>
+            <span class="delete icon">愡</span>
+        </div>
+        <div class="input">
+            <input id="invitation" type="number" placeholder="请输入会议密码" name="firstname">
+            <span from="distinguish" class="img icon">團</span>
+            <span class="delete icon">愡</span>
+        </div>
+        <div class="submitDiv"><span class="submit">加入会议</span></div>
+    </div>
+
+    <script src="js/zepto.min.js"></script>
+    <script>
+        // 阻止浏览器滚动，防止微信露底
+        $(document).on('touchmove',function(e){
+            e.preventDefault();
+        });
+        $('input').on('click,focus,touchstart',function() {
+            return false;
+        });
+
+        $(function() {
+            $('.submit').on('tap, click',function () {
+                var $invitation = $('#invitation'),
+                    $distinguish = $('#distinguish'),
+                    invitation = $invitation.val(),
+                    distinguish = $distinguish.val();
+                if(distinguish == '') {
+                    $distinguish.attr('placeholder', '会议ID不能为空!!!');
+                    return;
+                }
+                if(invitation == '') {
+                    $invitation.attr('placeholder', '会议密码不能为空!!!');
+                    return;
+                }
+                location.href = 'play.html?invitation=' + invitation + '&distinguish=' + distinguish;
+            });
+            // 删除按钮
+            $('.delete').on('tap, click', function() {
+                $(this).siblings('input').val('');
+            });
+        });
+    </script>
+</body>
+</html>
